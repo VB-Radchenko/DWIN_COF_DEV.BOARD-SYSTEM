@@ -1,0 +1,793 @@
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN ..\OBJ\UART.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\UART\UART.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USE
+                    -R;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\HAND
+                    -WARE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\UART.lst) TABS(2) OBJECT(..\OBJ\UART.obj)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "Uart.h"
+  36          
+  37          //==============================================================================
+  38          //---------------------------------Variables------------------------------------
+  39          //==============================================================================
+  40          #if UART2_ENABLE
+  41          Uartx_Define xdata Uart2;           ///< UART2 configuration and state.
+  42          Uartx_Frame_Data xdata Uart2_Frame; ///< UART2 frame data.
+  43          #endif
+  44          #if UART3_ENABLE
+  45          Uartx_Define xdata Uart3;           ///< UART3 configuration and state.
+  46          Uartx_Frame_Data xdata Uart3_Frame; ///< UART3 frame data.
+  47          #endif
+  48          #if UART4_ENABLE
+              Uartx_Define xdata Uart4;           ///< UART4 configuration and state.
+              Uartx_Frame_Data xdata Uart4_Frame; ///< UART4 frame data.
+              #endif
+  52          #if UART5_ENABLE
+              Uartx_Define xdata Uart5;           ///< UART5 configuration and state.
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 2   
+
+              Uartx_Frame_Data xdata Uart5_Frame; ///< UART5 frame data.
+              #endif
+  56          
+  57          bit ResponseFlag = 0;               ///< Response flag.
+  58          bit AutoDataUpload = 0;             ///< Auto data upload flag.
+  59          bit CrcCheckFlag = 0;               ///< CRC check flag.
+  60          
+  61          //==============================================================================
+  62          //--------------------------------Functions-------------------------------------
+  63          //==============================================================================
+  64          #if UART2_ENABLE
+  65          /**
+  66           * @brief Initializes UART2 interface.
+  67           */
+  68          static void Uart2Init(void)
+  69          {
+  70   1          uint16_t i;
+  71   1          Uart2.Id = 2;
+  72   1          Uart2.TxRead = 0;
+  73   1          Uart2.TxWrite = 0;
+  74   1          Uart2.TxBusy = 0;
+  75   1          Uart2.RxRead = 0;
+  76   1          Uart2.RxWrite = 0;
+  77   1          Uart2.RxBusy = 0;
+  78   1          Uart2.RxFlag = UART_REV_PRE;
+  79   1          Uart2.Response = RESPONSE_UART2;
+  80   1          Uart2.CrcCheck = CRC_CHECK_UART2;
+  81   1          Uart2.Delay = DELAY_UART2;
+  82   1          for (i = 0; i < UART_TX_LENGTH; i++) Uart2.TxBuffer[i] = 0;
+  83   1          for (i = 0; i < UART_RX_LENGTH; i++) Uart2.RxBuffer[i] = 0;
+  84   1          i = 1024 - FOSC / 64 / BAUD_UART2;
+  85   1          MUX_SEL |= 0x40;
+  86   1          P0MDOUT &= 0xCF;
+  87   1          P0MDOUT |= 0x10;
+  88   1          ADCON = 0x80;
+  89   1          SCON0 = 0x50;
+  90   1          SREL0H = (uint8_t)(i >> 8);
+  91   1          SREL0L = (uint8_t)i;
+  92   1          ES0 = 1;
+  93   1          EA = 1;
+  94   1      }
+  95          #endif
+  96          
+  97          #if UART3_ENABLE
+  98          /**
+  99           * @brief Initializes UART3 interface.
+ 100           */
+ 101          static void Uart3Init(void)
+ 102          {
+ 103   1          uint16_t i;
+ 104   1          Uart3.Id = 3;
+ 105   1          Uart3.TxRead = 0;
+ 106   1          Uart3.TxWrite = 0;
+ 107   1          Uart3.TxBusy = 0;
+ 108   1          Uart3.RxRead = 0;
+ 109   1          Uart3.RxWrite = 0;
+ 110   1          Uart3.RxBusy = 0;
+ 111   1          Uart3.RxFlag = UART_REV_PRE;
+ 112   1          Uart3.Response = RESPONSE_UART3;
+ 113   1          Uart3.CrcCheck = CRC_CHECK_UART3;
+ 114   1          Uart3.Delay = DELAY_UART3;
+ 115   1          for (i = 0; i < UART_TX_LENGTH; i++) Uart3.TxBuffer[i] = 0;
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 3   
+
+ 116   1          for (i = 0; i < UART_RX_LENGTH; i++) Uart3.RxBuffer[i] = 0;
+ 117   1          i = 1024 - FOSC / 32 / BAUD_UART3;
+ 118   1          SREL1H = (uint8_t)(i >> 8);
+ 119   1          SREL1L = (uint8_t)i;
+ 120   1          MUX_SEL |= 0x20;
+ 121   1          P0MDOUT |= 0x40;
+ 122   1          SCON1 = 0x90;
+ 123   1          IEN2 |= 0x01;
+ 124   1          EA = 1;
+ 125   1      }
+ 126          #endif
+ 127          
+ 128          #if UART4_ENABLE
+              /**
+               * @brief Initializes UART4 interface.
+               */
+              static void Uart4Init(void)
+              {
+                  uint16_t i;
+                  Uart4.Id = 4;
+                  Uart4.TxRead = 0;
+                  Uart4.TxWrite = 0;
+                  Uart4.TxBusy = 0;
+                  Uart4.RxRead = 0;
+                  Uart4.RxWrite = 0;
+                  Uart4.RxBusy = 0;
+                  Uart4.RxFlag = UART_REV_PRE;
+                  Uart4.Response = RESPONSE_UART4;
+                  Uart4.CrcCheck = CRC_CHECK_UART4;
+                  Uart4.Delay = DELAY_UART4;
+                  for (i = 0; i < UART_TX_LENGTH; i++) Uart4.TxBuffer[i] = 0;
+                  for (i = 0; i < UART_RX_LENGTH; i++) Uart4.RxBuffer[i] = 0;
+                  P0MDOUT |= 0x03;
+                  i = FOSC / 8 / BAUD_UART4;
+                  SCON2T = 0x80;
+                  SCON2R = 0x80;
+                  ES2R = 1;
+                  ES2T = 1;
+                  BODE2_DIV_H = (uint8_t)(i >> 8);
+                  BODE2_DIV_L = (uint8_t)i;
+                  P0MDOUT |= (1 << 0);
+                  TR4 = 0;
+                  EA = 1;
+              }
+              #endif
+ 161          
+ 162          #if UART5_ENABLE
+              /**
+               * @brief Initializes UART5 interface.
+               */
+              static void Uart5Init(void)
+              {
+                  uint16_t i;
+                  Uart5.Id = 5;
+                  Uart5.TxRead = 0;
+                  Uart5.TxWrite = 0;
+                  Uart5.TxBusy = 0;
+                  Uart5.RxRead = 0;
+                  Uart5.RxWrite = 0;
+                  Uart5.RxBusy = 0;
+                  Uart5.RxFlag = UART_REV_PRE;
+                  Uart5.Response = RESPONSE_UART5;
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 4   
+
+                  Uart5.CrcCheck = CRC_CHECK_UART5;
+                  Uart5.Delay = DELAY_UART5;
+                  for (i = 0; i < UART_TX_LENGTH; i++) Uart5.TxBuffer[i] = 0;
+                  for (i = 0; i < UART_RX_LENGTH; i++) Uart5.RxBuffer[i] = 0;
+                  P0MDOUT |= 0x03;
+                  i = FOSC / 8 / BAUD_UART5;
+                  SCON3T = 0x80;
+                  SCON3R = 0x80;
+                  ES3R = 1;
+                  ES3T = 1;
+                  BODE3_DIV_H = (uint8_t)(i >> 8);
+                  BODE3_DIV_L = (uint8_t)i;
+                  P0MDOUT |= (1 << 1);
+                  EA = 1;
+              }
+              #endif
+ 194          
+ 195          /**
+ 196           * @brief Initializes all enabled UART interfaces.
+ 197           */
+ 198          void UartInit(void)
+ 199          {
+ 200   1      #if UART2_ENABLE
+ 201   1          Uart2Init();
+ 202   1      #endif
+ 203   1      #if UART3_ENABLE
+ 204   1          Uart3Init();
+ 205   1      #endif
+ 206   1      #if UART4_ENABLE
+                  Uart4Init();
+              #endif
+ 209   1      #if UART5_ENABLE
+                  Uart5Init();
+              #endif
+ 212   1      }
+ 213          
+ 214          /**
+ 215           * @brief Decrements delay counters for all enabled UART interfaces.
+ 216           */
+ 217          void InterfaceDelay(void)
+ 218          {
+ 219   1      #if UART2_ENABLE
+ 220   1          if (Uart2.Delay > 0) Uart2.Delay--;
+ 221   1      #endif
+ 222   1      #if UART3_ENABLE
+ 223   1          if (Uart3.Delay > 0) Uart3.Delay--;
+ 224   1      #endif
+ 225   1      #if UART4_ENABLE
+                  if (Uart4.Delay > 0) Uart4.Delay--;
+              #endif
+ 228   1      #if UART5_ENABLE
+                  if (Uart5.Delay > 0) Uart5.Delay--;
+              #endif
+ 231   1      }
+ 232          
+ 233          /**
+ 234           * @brief Writes a byte to the UART transmit buffer.
+ 235           * @param uart Pointer to UART configuration structure.
+ 236           * @param dat Byte to transmit.
+ 237           */
+ 238          void UartTxWriteBuffer(Uartx_Define* uart, uint8_t dat)
+ 239          {
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 5   
+
+ 240   1          uart->TxBuffer[uart->TxWrite] = dat;
+ 241   1          if (uart->TxRead > uart->TxWrite)
+ 242   1          {
+ 243   2              while ((uart->TxWrite + 1) == uart->TxRead);
+ 244   2          }
+ 245   1          ++uart->TxWrite;
+ 246   1          if (uart->TxWrite >= UART_TX_LENGTH)
+ 247   1          {
+ 248   2              while (uart->TxRead == 0);
+ 249   2              uart->TxWrite = 0;
+ 250   2          }
+ 251   1          if (uart->TxBusy == 0)
+ 252   1          {
+ 253   2              uart->TxBusy = 1;
+ 254   2              if (uart->Id == 2) TI0 = 1;
+ 255   2              else if (uart->Id == 3) SCON1 |= 0x02;
+ 256   2              else if (uart->Id == 4) { SCON2T |= 0x01; }
+ 257   2              else if (uart->Id == 5) SCON3T |= 0x01;
+ 258   2          }
+ 259   1      }
+ 260          
+ 261          /**
+ 262           * @brief Sends a single byte over the specified UART.
+ 263           * @param uart_number UART identifier (2, 3, 4, or 5).
+ 264           * @param dat Byte to send.
+ 265           */
+ 266          void UartSendByte(uint8_t uart_number, uint8_t dat)
+ 267          {
+ 268   1      #if UART2_ENABLE
+ 269   1          if (uart_number == 2) UartTxWriteBuffer(&Uart2, dat);
+ 270   1      #endif
+ 271   1      #if UART3_ENABLE
+ 272   1          if (uart_number == 3) UartTxWriteBuffer(&Uart3, dat);
+ 273   1      #endif
+ 274   1      #if UART4_ENABLE
+                  if (uart_number == 4) UartTxWriteBuffer(&Uart4, dat);
+              #endif
+ 277   1      #if UART5_ENABLE
+                  if (uart_number == 5) UartTxWriteBuffer(&Uart5, dat);
+              #endif
+ 280   1      }
+ 281          
+ 282          /**
+ 283           * @brief Sends a string of bytes over the specified UART.
+ 284           * @param uart_number UART identifier (2, 3, 4, or 5).
+ 285           * @param str Pointer to the byte array to send.
+ 286           * @param len Length of the byte array.
+ 287           */
+ 288          void UartSendStr(uint8_t uart_number, uint8_t* str, uint8_t len)
+ 289          {
+ 290   1          uint8_t i;
+ 291   1          for (i = 0; i < len; i++)
+ 292   1          {
+ 293   2              UartSendByte(uart_number, *str++);
+ 294   2          }
+ 295   1      }
+ 296          
+ 297          /**
+ 298           * @brief Sends data over the specified UART with optional CRC.
+ 299           * @param arr Data array to send.
+ 300           * @param uart_num UART identifier (2, 3, 4, or 5).
+ 301           * @param auto_send Enable automatic data upload.
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 6   
+
+ 302           * @param crc_ck Enable CRC check.
+ 303           */
+ 304          void UartDataSend(uint8_t* arr, uint8_t uart_num, bit auto_send, bit crc_ck)
+ 305          {
+ 306   1          uint16_t v1 = ReadDgus(0x0f01);
+ 307   1          AutoDataUpload = auto_send;
+ 308   1          if (AutoDataUpload)
+ 309   1          {
+ 310   2              CrcCheckFlag = crc_ck;
+ 311   2              if (CrcCheckFlag)
+ 312   2              {
+ 313   3                  uint16_t crc = 0;
+ 314   3                  arr[2] = (((uint8_t)v1) << 1) + 6;
+ 315   3                  crc = Crc16Table(arr + 3, arr[2] - 2);
+ 316   3                  arr[arr[2] + 1] = crc & 0x00FF;
+ 317   3                  arr[arr[2] + 2] = crc >> 8;
+ 318   3                  UartSendStr(uart_num, arr, arr[2] + 3);
+ 319   3                  arr[2] = (((uint8_t)v1) << 1) + 4;
+ 320   3              }
+ 321   2              else
+ 322   2              {
+ 323   3                  UartSendStr(uart_num, arr, arr[2] + 3);
+ 324   3              }
+ 325   2          }
+ 326   1      }
+ 327          
+ 328          /**
+ 329           * @brief Reads data from DGUS register 0x0F00 and sends it over enabled UARTs.
+ 330           */
+ 331          void Read0xF00(void)
+ 332          {
+ 333   1          uint16_t va = ReadDgus(0x0f00);
+ 334   1          uint16_t v1 = ReadDgus(0x0f01);
+ 335   1          if (((uint8_t)(va >> 8)) == 0x5A)
+ 336   1          {
+ 337   2              uint8_t i;
+ 338   2              uint16_t temp;
+ 339   2              uint8_t xdata val[100] = {0};
+ 340   2              val[0] = DTHD1;
+ 341   2              val[1] = DTHD2;
+ 342   2              val[2] = (((uint8_t)v1) << 1) + 4;
+ 343   2              val[3] = 0x83;
+ 344   2              val[4] = (uint8_t)va;
+ 345   2              val[5] = (uint8_t)(v1 >> 8);
+ 346   2              val[6] = (uint8_t)v1;
+ 347   2              for (i = 0; i < (uint8_t)v1; i++)
+ 348   2              {
+ 349   3                  temp = ReadDgus(((val[4] << 8) + val[5] + i));
+ 350   3                  val[7 + 2 * i] = (uint8_t)(temp >> 8);
+ 351   3                  val[8 + 2 * i] = (uint8_t)(temp);
+ 352   3              }
+ 353   2      #if UART2_ENABLE
+ 354   2              UartDataSend(val, 2, DATA_UPLOAD_UART2, CRC_CHECK_UART2);
+ 355   2      #endif
+ 356   2      #if UART3_ENABLE
+ 357   2              UartDataSend(val, 3, DATA_UPLOAD_UART3, CRC_CHECK_UART3);
+ 358   2      #endif
+ 359   2      #if UART4_ENABLE
+                      UartDataSend(val, 4, DATA_UPLOAD_UART4, CRC_CHECK_UART4);
+              #endif
+ 362   2      #if UART5_ENABLE
+                      UartDataSend(val, 5, DATA_UPLOAD_UART5, CRC_CHECK_UART5);
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 7   
+
+              #endif
+ 365   2              WriteDgus(0x0f00, 0);
+ 366   2              WriteDgus(0x0f01, 0);
+ 367   2          }
+ 368   1      }
+ 369          
+ 370          /**
+ 371           * @brief Processes command 0x82 for writing data to DGUS registers.
+ 372           * @param uart_num UART identifier (2, 3, 4, or 5).
+ 373           * @param arr Data array containing the command.
+ 374           */
+ 375          void Deal82Cmd(uint8_t uart_num, uint8_t* arr)
+ 376          {
+ 377   1          if (CrcCheckFlag == 0)
+ 378   1          {
+ 379   2              if (arr[4] == 0 && arr[5] == 6)
+ 380   2              {
+ 381   3                  arr[7] = 0xA5;
+ 382   3              }
+ 383   2              WriteDgusVp((arr[4] << 8) + arr[5], arr + 6, arr[2] - 3);
+ 384   2              if (ResponseFlag)
+ 385   2              {
+ 386   3                  uint8_t temp_arr[] = {DTHD1, DTHD2, 0x03, 0x82, 0x4F, 0x4B};
+ 387   3                  UartSendStr(uart_num, temp_arr, 6);
+ 388   3              }
+ 389   2          }
+ 390   1          else
+ 391   1          {
+ 392   2              uint16_t crc = Crc16Table(&arr[3], arr[2] - 2);
+ 393   2              uint16_t crc_check = (uint16_t)(arr[3 + arr[2] - 1] << 8) + (uint16_t)(arr[3 + arr[2] - 2]);
+ 394   2              if (crc == crc_check)
+ 395   2              {
+ 396   3                  WriteDgusVp((arr[4] << 8) + arr[5], arr + 6, arr[2] - 5);
+ 397   3                  if (ResponseFlag)
+ 398   3                  {
+ 399   4                      uint8_t temp_arr[] = {DTHD1, DTHD2, 0x05, 0x82, 0x4F, 0x4B, 0xA5, 0xEF};
+ 400   4                      UartSendStr(uart_num, temp_arr, 8);
+ 401   4                  }
+ 402   3              }
+ 403   2          }
+ 404   1      }
+ 405          
+ 406          /**
+ 407           * @brief Processes command 0x83 for reading data from DGUS registers.
+ 408           * @param uart_num UART identifier (2, 3, 4, or 5).
+ 409           * @param arr Output data array.
+ 410           * @param arr1 Input data array containing the command.
+ 411           */
+ 412          void Deal83Cmd(uint8_t uart_num, uint8_t* arr, uint8_t* arr1)
+ 413          {
+ 414   1          uint8_t i;
+ 415   1          if (CrcCheckFlag == 0)
+ 416   1          {
+ 417   2              for (i = 0; i < 7; i++) arr[i] = arr1[i];
+ 418   2              ReadDgusVp((arr[4] << 8) + arr[5], &arr[7], arr[6]);
+ 419   2              arr[2] = (2 * arr[6]) + 4;
+ 420   2              UartSendStr(uart_num, arr, arr[2] + 3);
+ 421   2          }
+ 422   1          else
+ 423   1          {
+ 424   2              uint16_t crc, crc_check;
+ 425   2              for (i = 0; i < 9; i++) arr[i] = arr1[i];
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 8   
+
+ 426   2              crc = Crc16Table(&arr[3], arr[2] - 2);
+ 427   2              crc_check = (uint16_t)(arr[3 + arr[2] - 1] << 8) + (uint16_t)(arr[3 + arr[2] - 2]);
+ 428   2              if (crc == crc_check)
+ 429   2              {
+ 430   3                  ReadDgusVp((arr[4] << 8) + arr[5], &arr[7], arr[6]);
+ 431   3                  arr[2] = (2 * arr[6]) + 4 + 2;
+ 432   3                  crc = Crc16Table(arr + 3, arr[2] - 2);
+ 433   3                  arr[arr[2] + 1] = crc & 0x00FF;
+ 434   3                  arr[arr[2] + 2] = crc >> 8;
+ 435   3                  UartSendStr(uart_num, arr, arr[2] + 3);
+ 436   3              }
+ 437   2          }
+ 438   1      }
+ 439          
+ 440          /**
+ 441           * @brief Processes received UART data and dispatches commands.
+ 442           * @param arr_rece Received data array.
+ 443           * @param uart_num UART identifier (2, 3, 4, or 5).
+ 444           * @param response Response enable flag.
+ 445           * @param crc_ck CRC check enable flag.
+ 446           */
+ 447          void DealUartData(uint8_t* arr_rece, uint8_t uart_num, uint8_t response, uint8_t crc_ck)
+ 448          {
+ 449   1          if ((arr_rece[0] == DTHD1) && (arr_rece[1] == DTHD2))
+ 450   1          {
+ 451   2              if (arr_rece[3] == 0x82)
+ 452   2              {
+ 453   3                  ResponseFlag = response;
+ 454   3                  CrcCheckFlag = crc_ck;
+ 455   3                  Deal82Cmd(uart_num, arr_rece);
+ 456   3              }
+ 457   2              else if (arr_rece[3] == 0x83)
+ 458   2              {
+ 459   3                  uint8_t xdata val[UARTX_FRAME_DATA_LENGTH] = {0};
+ 460   3                  CrcCheckFlag = crc_ck;
+ 461   3                  Deal83Cmd(uart_num, val, arr_rece);
+ 462   3              }
+ 463   2          }
+ 464   1      }
+ 465          
+ 466          /**
+ 467           * @brief Processes received UART frames for a specific UART.
+ 468           * @param uart Pointer to UART configuration structure.
+ 469           */
+ 470          void UartHandleFrame(Uartx_Define* uart)
+ 471          {
+ 472   1          uint8_t c;
+ 473   1          Uartx_Frame_Data* uart_data;
+ 474   1      #if UART2_ENABLE
+ 475   1          if (uart->Id == 2) uart_data = &Uart2_Frame;
+ 476   1          else
+ 477   1      #endif
+ 478   1      #if UART3_ENABLE
+ 479   1          if (uart->Id == 3) uart_data = &Uart3_Frame;
+ 480   1          else
+ 481   1      #endif
+ 482   1      #if UART4_ENABLE
+                  if (uart->Id == 4) uart_data = &Uart4_Frame;
+                  else
+              #endif
+ 486   1      #if UART5_ENABLE
+                  if (uart->Id == 5) uart_data = &Uart5_Frame;
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 9   
+
+                  else
+              #endif
+ 490   1          {
+ 491   2              return; // Exit if no valid UART is found
+ 492   2          }
+ 493   1      
+ 494   1          while ((uart->RxWrite - uart->RxRead + UART_RX_LENGTH) % UART_RX_LENGTH)
+ 495   1          {
+ 496   2              EA = 0;
+ 497   2              c = uart->RxBuffer[uart->RxRead++];
+ 498   2              uart->RxRead %= UART_RX_LENGTH;
+ 499   2              uart->RxBusy = 0;
+ 500   2              EA = 1;
+ 501   2              if (uart->RxFlag == UART_REV_PRE)
+ 502   2              {
+ 503   3                  uart_data->DataLen = 0;
+ 504   3                  uart_data->DataCode = 0x00;
+ 505   3                  uart_data->VarAddr = 0x0000;
+ 506   3                  uart_data->VarIndex = 0;
+ 507   3                  if (c == DTHD1)
+ 508   3                  {
+ 509   4                      uart->RxFlag = UART_REV_GETFH1;
+ 510   4                      uart_data->VarData[uart_data->VarIndex++] = c;
+ 511   4                  }
+ 512   3              }
+ 513   2              else if (uart->RxFlag == UART_REV_GETFH1)
+ 514   2              {
+ 515   3                  if (c == DTHD2)
+ 516   3                  {
+ 517   4                      uart->RxFlag = UART_REV_GETFH2;
+ 518   4                      uart_data->VarData[uart_data->VarIndex++] = c;
+ 519   4                  }
+ 520   3                  else
+ 521   3                  {
+ 522   4                      uart->RxFlag = UART_REV_PRE;
+ 523   4                  }
+ 524   3              }
+ 525   2              else if (uart->RxFlag == UART_REV_GETFH2)
+ 526   2              {
+ 527   3                  if (c < 3 || c > UARTX_FRAME_DATA_LENGTH)
+ 528   3                  {
+ 529   4                      uart->RxFlag = UART_REV_PRE;
+ 530   4                  }
+ 531   3                  else
+ 532   3                  {
+ 533   4                      uart_data->DataLen = c;
+ 534   4                      uart_data->VarData[uart_data->VarIndex++] = c;
+ 535   4                      uart->RxFlag = UART_REV_GETLEN;
+ 536   4                  }
+ 537   3              }
+ 538   2              else if (uart->RxFlag == UART_REV_GETLEN)
+ 539   2              {
+ 540   3                  if (c != 0x82 && c != 0x83)
+ 541   3                  {
+ 542   4                      if (c == 0x80 || c == 0x81)
+ 543   4                      {
+ 544   5                          uart_data->DataCode = c;
+ 545   5                          uart_data->VarData[uart_data->VarIndex++] = c;
+ 546   5                          uart->RxFlag = UART_REV_GETADDR2;
+ 547   5                          uart_data->DataLen += 2;
+ 548   5                      }
+ 549   4                      else
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 10  
+
+ 550   4                      {
+ 551   5                          uart->RxFlag = UART_REV_PRE;
+ 552   5                      }
+ 553   4                  }
+ 554   3                  else
+ 555   3                  {
+ 556   4                      uart_data->DataCode = c;
+ 557   4                      uart_data->VarData[uart_data->VarIndex++] = c;
+ 558   4                      uart->RxFlag = UART_REV_GETCODE;
+ 559   4                  }
+ 560   3              }
+ 561   2              else if (uart->RxFlag == UART_REV_GETCODE)
+ 562   2              {
+ 563   3                  uart_data->VarAddr = ((uint16_t)c) << 8;
+ 564   3                  uart_data->VarData[uart_data->VarIndex++] = c;
+ 565   3                  uart->RxFlag = UART_REV_GETADDR1;
+ 566   3              }
+ 567   2              else if (uart->RxFlag == UART_REV_GETADDR1)
+ 568   2              {
+ 569   3                  uart_data->VarAddr |= c;
+ 570   3                  uart_data->VarData[uart_data->VarIndex++] = c;
+ 571   3                  uart->RxFlag = UART_REV_GETADDR2;
+ 572   3              }
+ 573   2              else if (uart->RxFlag == UART_REV_GETADDR2)
+ 574   2              {
+ 575   3                  uart_data->VarData[uart_data->VarIndex++] = c;
+ 576   3                  if (uart_data->VarIndex == uart_data->DataLen + 3)
+ 577   3                  {
+ 578   4                      uart->RxFlag = UART_REV_DONE;
+ 579   4                      break;
+ 580   4                  }
+ 581   3              }
+ 582   2          }
+ 583   1          if (uart->RxFlag == UART_REV_DONE)
+ 584   1          {
+ 585   2              uart->RxFlag = UART_REV_PRE;
+ 586   2              DealUartData(uart_data->VarData, uart->Id, uart->Response, uart->CrcCheck);
+ 587   2          }
+ 588   1      }
+ 589          
+ 590          /**
+ 591           * @brief Processes UART frame data for all enabled interfaces.
+ 592           */
+ 593          void UartProcess(void)
+ 594          {
+ 595   1      #if UART2_ENABLE
+ 596   1          if (Uart2.Delay == 0) UartHandleFrame(&Uart2);
+ 597   1      #endif
+ 598   1      #if UART3_ENABLE
+ 599   1          if (Uart3.Delay == 0) UartHandleFrame(&Uart3);
+ 600   1      #endif
+ 601   1      #if UART4_ENABLE
+                  if (Uart4.Delay == 0) UartHandleFrame(&Uart4);
+              #endif
+ 604   1      #if UART5_ENABLE
+                  if (Uart5.Delay == 0) UartHandleFrame(&Uart5);
+              #endif
+ 607   1      }
+ 608          
+ 609          #if UART2_ENABLE
+ 610          /**
+ 611           * @brief Interrupt service routine for UART2 transmit and receive.
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 11  
+
+ 612           */
+ 613          void Uart2TxRxIsr(void) interrupt 4
+ 614          {
+ 615   1          EA = 0;
+ 616   1          if (RI0 == 1)
+ 617   1          {
+ 618   2              RI0 = 0;
+ 619   2              Uart2.RxBuffer[Uart2.RxWrite] = SBUF0;
+ 620   2              Uart2.RxWrite++;
+ 621   2              Uart2.RxWrite %= UART_RX_LENGTH;
+ 622   2          }
+ 623   1          else if (TI0 == 1)
+ 624   1          {
+ 625   2              TI0 = 0;
+ 626   2              if (Uart2.TxRead != Uart2.TxWrite)
+ 627   2              {
+ 628   3                  SBUF0 = Uart2.TxBuffer[Uart2.TxRead];
+ 629   3                  Uart2.TxRead++;
+ 630   3                  Uart2.TxRead %= UART_TX_LENGTH;
+ 631   3              }
+ 632   2              else
+ 633   2              {
+ 634   3                  Uart2.TxBusy = 0;
+ 635   3              }
+ 636   2          }
+ 637   1          EA = 1;
+ 638   1      }
+ 639          #endif
+ 640          
+ 641          #if UART3_ENABLE
+ 642          /**
+ 643           * @brief Interrupt service routine for UART3 receive and transmit.
+ 644           */
+ 645          void Uart3RxIsr(void) interrupt 16
+ 646          {
+ 647   1          if (SCON1 & 0x01)
+ 648   1          {
+ 649   2              SCON1 &= 0xFE;
+ 650   2              Uart3.RxBuffer[Uart3.RxWrite] = SBUF1;
+ 651   2              Uart3.RxWrite++;
+ 652   2              Uart3.RxWrite %= UART_RX_LENGTH;
+ 653   2          }
+ 654   1          else if (SCON1 & 0x02)
+ 655   1          {
+ 656   2              SCON1 &= 0xFD;
+ 657   2              if (Uart3.TxRead != Uart3.TxWrite)
+ 658   2              {
+ 659   3                  SBUF1 = Uart3.TxBuffer[Uart3.TxRead];
+ 660   3                  Uart3.TxRead++;
+ 661   3                  Uart3.TxRead %= UART_TX_LENGTH;
+ 662   3              }
+ 663   2              else
+ 664   2              {
+ 665   3                  Uart3.TxBusy = 0;
+ 666   3              }
+ 667   2          }
+ 668   1      }
+ 669          #endif
+ 670          
+ 671          #if UART4_ENABLE
+              /**
+               * @brief Interrupt service routine for UART4 receive.
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 12  
+
+               */
+              void Uart4RxIsr(void) interrupt 11
+              {
+                  EA = 0;
+                  SCON2R &= 0xFE;
+                  Uart4.RxBuffer[Uart4.RxWrite] = SBUF2_RX;
+                  Uart4.RxWrite++;
+                  Uart4.RxWrite %= UART_RX_LENGTH;
+                  EA = 1;
+              }
+              
+              /**
+               * @brief Interrupt service routine for UART4 transmit.
+               */
+              void Uart4TxIsr(void) interrupt 10
+              {
+                  EA = 0;
+                  SCON2T &= 0xFE;
+                  if (Uart4.TxRead != Uart4.TxWrite)
+                  {
+                      SBUF2_TX = Uart4.TxBuffer[Uart4.TxRead];
+                      Uart4.TxRead++;
+                      Uart4.TxRead %= UART_TX_LENGTH;
+                  }
+                  else
+                  {
+                      TR4 = 0;
+                      Uart4.TxBusy = 0;
+                  }
+                  EA = 1;
+              }
+              #endif
+ 706          
+ 707          #if UART5_ENABLE
+              /**
+               * @brief Interrupt service routine for UART5 receive.
+               */
+              void Uart5RxIsr(void) interrupt 13
+              {
+                  EA = 0;
+                  SCON3R &= 0xFE;
+                  Uart5.RxBuffer[Uart5.RxWrite] = SBUF3_RX;
+                  Uart5.RxWrite++;
+                  Uart5.RxWrite %= UART_RX_LENGTH;
+                  EA = 1;
+              }
+              
+              /**
+               * @brief Interrupt service routine for UART5 transmit.
+               */
+              void Uart5TxIsr(void) interrupt 12
+              {
+                  EA = 0;
+                  SCON3T &= 0xFE;
+                  if (Uart5.TxRead != Uart5.TxWrite)
+                  {
+                      SBUF3_TX = Uart5.TxBuffer[Uart5.TxRead];
+                      Uart5.TxRead++;
+                      Uart5.TxRead %= UART_TX_LENGTH;
+                  }
+                  else
+                  {
+C51 COMPILER V9.57.0.0   UART                                                              12/14/2025 23:42:35 PAGE 13  
+
+                      Uart5.TxBusy = 0;
+                  }
+                  EA = 1;
+              }
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   4316    ----
+   CONSTANT SIZE    =    378    ----
+   XDATA SIZE       =   3128     436
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3       2
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

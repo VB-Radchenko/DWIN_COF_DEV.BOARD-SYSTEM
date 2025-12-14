@@ -1,0 +1,124 @@
+C51 COMPILER V9.57.0.0   DELAY                                                             12/14/2025 23:42:35 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE DELAY
+OBJECT MODULE PLACED IN ..\OBJ\Delay.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\TIMER\Delay.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\U
+                    -SER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\HA
+                    -NDWARE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\Delay.lst) TABS(2) OBJECT(..\OBJ\Delay.obj)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "Delay.h" // OK
+  36          #include "WDT.h"
+  37          
+  38          //==============================================================================
+  39          //---------------------------------Defines--------------------------------------
+  40          //==============================================================================
+  41          /**
+  42           * @var uint32_t DelayMsTick
+  43           * @brief Global tick counter for millisecond delays.
+  44           */
+  45          extern uint32_t DelayMsTick;
+  46          
+  47          //==============================================================================
+  48          //--------------------------------FUNCTIONS-------------------------------------
+  49          //==============================================================================
+  50          
+  51          /**
+  52           * @brief Delays execution for a specified number of microseconds.
+  53           * @param us Number of microseconds to delay.
+C51 COMPILER V9.57.0.0   DELAY                                                             12/14/2025 23:42:35 PAGE 2   
+
+  54           */
+  55          void SysDelayUs(uint32_t us)
+  56          {
+  57   1          uint16_t ui, uj;
+  58   1          for (ui = 0; ui < us; ui++)
+  59   1              for (uj = 0; uj < 5; uj++);
+  60   1      }
+  61          
+  62          /**
+  63           * @brief Delays execution for a specified number of milliseconds.
+  64           * @param ms Number of milliseconds to delay.
+  65           */
+  66          void SysDelayMs(uint32_t ms)
+  67          {
+  68   1          DelayMsTick = ms;
+  69   1          while (DelayMsTick) { ; }
+  70   1      }
+  71          
+  72          /**
+  73           * @brief Delays execution for a specified number of milliseconds with watchdog timer reset.
+  74           * @param ms Number of milliseconds to delay.
+  75           */
+  76          void SysDelayMsWdtReset(uint32_t ms)
+  77          {
+  78   1          uint32_t DelayMsTickOld;
+  79   1      
+  80   1          DelayMsTick = ms;
+  81   1          if (DelayMsTick)
+  82   1          {
+  83   2              if (DelayMsTick != DelayMsTickOld)
+  84   2              {
+  85   3                  DelayMsTickOld = DelayMsTick;
+  86   3                  WDTRefresh();
+  87   3              }
+  88   2          }
+  89   1      }
+  90          
+  91          //==============================================================================
+  92          //---------------------------------END FILE-------------------------------------
+  93          //==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    178    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      20
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

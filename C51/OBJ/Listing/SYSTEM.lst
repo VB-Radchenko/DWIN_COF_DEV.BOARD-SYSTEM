@@ -1,0 +1,322 @@
+C51 COMPILER V9.57.0.0   SYSTEM                                                            12/15/2025 00:50:14 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE SYSTEM
+OBJECT MODULE PLACED IN ..\OBJ\SYSTEM.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\SYSTEM\SYSTEM.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..
+                    -\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\
+                    -HANDWARE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\SYSTEM.lst) TABS(2) OBJECT(..\OBJ\SYSTEM.obj
+                    -)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "SYSTEM.h"
+  36          
+  37          
+  38          //==============================================================================
+  39          //---------------------------------VARIABLES------------------------------------
+  40          //==============================================================================
+  41          
+  42          
+  43          //==============================================================================
+  44          //--------------------------------FUNCTIONS-------------------------------------
+  45          //==============================================================================
+  46          /**
+  47           * @brief Reads a buffer from a DGUS variable pointer register.
+  48           * @param Addr Starting address of the DGUS register.
+  49           * @param pBuf Pointer to the buffer to store the read data.
+  50           * @param Len16 Number of 16-bit words to read.
+  51           */
+  52          void ReadDgusVp(uint16_t Addr, uint8_t* pBuf, uint16_t Len16)
+C51 COMPILER V9.57.0.0   SYSTEM                                                            12/15/2025 00:50:14 PAGE 2   
+
+  53          {
+  54   1          /**
+  55   1           * @var unsigned char i
+  56   1           * @brief Flag for handling odd/even address alignment.
+  57   1           */
+  58   1          unsigned char i;
+  59   1      
+  60   1          EA = 0;
+  61   1          i = (unsigned char)(Addr & 0x01);
+  62   1          Addr = Addr / 2;
+  63   1          ADR_H = 0x00;
+  64   1          ADR_M = (unsigned char)(Addr >> 8);
+  65   1          ADR_L = (unsigned char)(Addr);
+  66   1          ADR_INC = 0x01;
+  67   1          RAMMODE = 0xAF;
+  68   1          while (APP_ACK == 0);
+  69   1          while (Len16 > 0)
+  70   1          {
+  71   2              APP_EN = 1;
+  72   2              while (APP_EN == 1);
+  73   2              if ((i == 0) && (Len16 > 0))
+  74   2              {
+  75   3                  *pBuf++ = DATA3;
+  76   3                  *pBuf++ = DATA2;
+  77   3                  i = 1;
+  78   3                  Len16--;
+  79   3              }
+  80   2              if ((i == 1) && (Len16 > 0))
+  81   2              {
+  82   3                  *pBuf++ = DATA1;
+  83   3                  *pBuf++ = DATA0;
+  84   3                  i = 0;
+  85   3                  Len16--;
+  86   3              }
+  87   2          }
+  88   1          RAMMODE = 0x00;
+  89   1          EA = 1;
+  90   1      }
+  91          
+  92          /**
+  93           * @brief Writes a buffer to a DGUS variable pointer register.
+  94           * @param Addr Starting address of the DGUS register.
+  95           * @param pBuf Pointer to the buffer containing data to write.
+  96           * @param Len16 Number of 16-bit words to write.
+  97           */
+  98          void WriteDgusVp(uint16_t Addr, uint8_t* pBuf, uint16_t Len16)
+  99          {
+ 100   1          /**
+ 101   1           * @var unsigned char i
+ 102   1           * @brief Flag for handling odd/even address alignment.
+ 103   1           */
+ 104   1        uint8_t i;  
+ 105   1            EA = 0;
+ 106   1        i = (uint8_t)(Addr&0x01);
+ 107   1        Addr >>= 1;
+ 108   1        ADR_H = 0x00;
+ 109   1        ADR_M = (uint8_t)(Addr>>8);
+ 110   1        ADR_L = (uint8_t)Addr;    
+ 111   1        ADR_INC = 0x01;
+ 112   1        RAMMODE = 0x8F;
+ 113   1        while(APP_ACK==0);
+ 114   1        if(i && Len16>0)
+C51 COMPILER V9.57.0.0   SYSTEM                                                            12/15/2025 00:50:14 PAGE 3   
+
+ 115   1        { 
+ 116   2          RAMMODE = 0x83; 
+ 117   2          DATA1 = *pBuf++;    
+ 118   2          DATA0 = *pBuf++;  
+ 119   2          APP_EN = 1;   
+ 120   2          Len16--;
+ 121   2        }
+ 122   1        RAMMODE = 0x8F;
+ 123   1        while(Len16>=2)
+ 124   1        { 
+ 125   2          DATA3 = *pBuf++;    
+ 126   2          DATA2 = *pBuf++;
+ 127   2          DATA1 = *pBuf++;    
+ 128   2          DATA0 = *pBuf++;
+ 129   2          APP_EN = 1;   
+ 130   2          Len16 -= 2;
+ 131   2        }
+ 132   1        if(Len16)
+ 133   1        { 
+ 134   2          RAMMODE = 0x8C;
+ 135   2          DATA3 = *pBuf++;    
+ 136   2          DATA2 = *pBuf++;
+ 137   2          APP_EN = 1;
+ 138   2        }
+ 139   1        RAMMODE = 0x00;
+ 140   1          EA = 1;
+ 141   1      }
+ 142          
+ 143          /**
+ 144           * @brief Gets the current page ID from the DGUS register.
+ 145           * @return uint16_t The current page ID.
+ 146           */
+ 147          uint16_t GetPageID(void)
+ 148          {
+ 149   1          /**
+ 150   1           * @var uint16_t nPage
+ 151   1           * @brief Stores the current page ID read from DGUS register.
+ 152   1           */
+ 153   1          uint16_t nPage;
+ 154   1          nPage = ReadDgus(PIC_NOW);
+ 155   1          return nPage;
+ 156   1      }
+ 157          
+ 158          /**
+ 159           * @brief Changes the current page to the specified page ID.
+ 160           * @param PageID The page ID to switch to.
+ 161           */
+ 162          void PageChange(uint16_t PageID)
+ 163          {
+ 164   1          /**
+ 165   1           * @var uint8_t buf[4]
+ 166   1           * @brief Buffer for constructing page change command.
+ 167   1           */
+ 168   1          uint8_t buf[4];
+ 169   1      
+ 170   1          buf[0] = 0x5A;
+ 171   1          buf[1] = 0x01;
+ 172   1          buf[2] = (uint8_t)(PageID >> 8);
+ 173   1          buf[3] = (uint8_t)PageID;
+ 174   1          WriteDgusVp(PIC_SET, buf, 2);
+ 175   1      }
+ 176          
+C51 COMPILER V9.57.0.0   SYSTEM                                                            12/15/2025 00:50:14 PAGE 4   
+
+ 177          /**
+ 178           * @brief Reads a 16-bit value from a DGUS register.
+ 179           * @param DgusAddr Address of the DGUS register.
+ 180           * @return uint16_t The 16-bit value read from the register.
+ 181           */
+ 182          uint16_t ReadDgus(uint16_t DgusAddr)
+ 183          {
+ 184   1          /**
+ 185   1           * @var uint16_t R_Dgus
+ 186   1           * @brief Stores the 16-bit value read from the DGUS register.
+ 187   1           */
+ 188   1          uint16_t R_Dgus = 0;
+ 189   1          EA = 0;
+ 190   1          ADR_H = 0x00;
+ 191   1          ADR_M = (uint8_t)((DgusAddr / 2) >> 8);
+ 192   1          ADR_L = (uint8_t)(DgusAddr / 2);
+ 193   1          RAMMODE = 0xAF;
+ 194   1          while (!APP_ACK);
+ 195   1          APP_EN = 1;
+ 196   1          while (APP_EN);
+ 197   1          if (DgusAddr % 2)
+ 198   1              R_Dgus = (DATA1 << 8) + DATA0;
+ 199   1          else
+ 200   1              R_Dgus = (DATA3 << 8) + DATA2;
+ 201   1          RAMMODE = 0x00;
+ 202   1          EA = 1;
+ 203   1      
+ 204   1          return R_Dgus;
+ 205   1      }
+ 206          
+ 207          /**
+ 208           * @brief Writes a 16-bit value to a DGUS register.
+ 209           * @param DgusAddr Address of the DGUS register.
+ 210           * @param Val The 16-bit value to write.
+ 211           */
+ 212          void WriteDgus(uint16_t DgusAddr, uint16_t Val)
+ 213          {
+ 214   1          EA = 0;
+ 215   1          ADR_H = 0x00;
+ 216   1          ADR_M = (uint8_t)((DgusAddr / 2) >> 8);
+ 217   1          ADR_L = (uint8_t)(DgusAddr / 2);
+ 218   1          RAMMODE = 0xAF;
+ 219   1          while (!APP_ACK);
+ 220   1          APP_EN = 1;
+ 221   1          while (APP_EN);
+ 222   1          RAMMODE = 0x00;
+ 223   1          ADR_M = (uint8_t)((DgusAddr / 2) >> 8);
+ 224   1          ADR_L = (uint8_t)(DgusAddr / 2);
+ 225   1          RAMMODE = 0x8F;
+ 226   1          while (!APP_ACK);
+ 227   1          if (DgusAddr % 2)
+ 228   1          {
+ 229   2              DATA1 = (uint8_t)(Val >> 8);
+ 230   2              DATA0 = (uint8_t)(Val);
+ 231   2          }
+ 232   1          else
+ 233   1          {
+ 234   2              DATA3 = (uint8_t)(Val >> 8);
+ 235   2              DATA2 = (uint8_t)(Val);
+ 236   2          }
+ 237   1          APP_EN = 1;
+ 238   1          while (APP_EN);
+C51 COMPILER V9.57.0.0   SYSTEM                                                            12/15/2025 00:50:14 PAGE 5   
+
+ 239   1          RAMMODE = 0x00;
+ 240   1          EA = 1;
+ 241   1      }
+ 242          
+ 243          /**
+ 244           * @brief Initializes system configuration registers.
+ 245           */
+ 246          void InitCFG(void)
+ 247          {
+ 248   1          CKCON = 0x00;      ///< Set clock control register.
+ 249   1          T2CON = 0x70;      ///< Configure Timer2.
+ 250   1          DPC = 0x00;        ///< Set display control register.
+ 251   1          PAGESEL = 0x01;    ///< Set page select register.
+ 252   1          D_PAGESEL = 0x02;  ///< Set display page select register.
+ 253   1          MUX_SEL = 0x60;    ///< Configure multiplexer select.
+ 254   1          PORTDRV = 0x01;    ///< Set port drive strength.
+ 255   1          RAMMODE = 0x00;    ///< Reset RAM mode.
+ 256   1      }
+ 257          
+ 258          /**
+ 259           * @brief Initializes interrupt control registers.
+ 260           */
+ 261          void InitInt(void)
+ 262          {
+ 263   1          IEN0 = 0x00;       ///< Clear interrupt enable register 0.
+ 264   1          IEN1 = 0x00;       ///< Clear interrupt enable register 1.
+ 265   1          IEN2 = 0x00;       ///< Clear interrupt enable register 2.
+ 266   1          IP0 = 0x00;        ///< Clear interrupt priority register 0.
+ 267   1          IP1 = 0x00;        ///< Clear interrupt priority register 1.
+ 268   1      }
+ 269          
+ 270          /**
+ 271           * @brief Initializes the CPU and system peripherals.
+ 272           */
+ 273          void InitCPU(void)
+ 274          {
+ 275   1          EA = 0;            ///< Disable global interrupts.
+ 276   1          InitCFG();         ///< Initialize configuration registers.
+ 277   1          InitInt();         ///< Initialize interrupt registers.
+ 278   1          EA = 1;            ///< Enable global interrupts.
+ 279   1      }
+ 280          
+ 281          
+ 282          //==============================================================================
+ 283          //---------------------------------END FILE-------------------------------------
+ 284          //==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    946    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      32
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

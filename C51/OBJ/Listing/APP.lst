@@ -1,0 +1,124 @@
+C51 COMPILER V9.57.0.0   APP                                                               12/15/2025 00:52:03 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE APP
+OBJECT MODULE PLACED IN ..\OBJ\APP.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\APP\APP.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USER;
+                    -..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\HANDWA
+                    -RE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\APP.lst) TABS(2) OBJECT(..\OBJ\APP.obj)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "APP.h"
+  36          #include "SYSTEM.h"
+  37          #include "UART.h"
+  38          #include "TIMER.h"
+  39          
+  40          //==============================================================================
+  41          //---------------------------------Defines--------------------------------------
+  42          //==============================================================================
+  43          
+  44          //==============================================================================
+  45          //--------------------------------Variables-------------------------------------
+  46          //==============================================================================
+  47          
+  48          xdata uint32_t SysTimCnt = 0;
+  49          xdata uint32_t Uptime = 0;
+  50          xdata uint32_t UptimeOld = 0;
+  51          xdata uint16_t ReadPage = 0;
+  52          
+  53          
+C51 COMPILER V9.57.0.0   APP                                                               12/15/2025 00:52:03 PAGE 2   
+
+  54          //==============================================================================
+  55          //---------------------------------- INIT---------------------------------------
+  56          //==============================================================================
+  57          void AppInit()
+  58          {
+  59   1        UartInit();   
+  60   1        TimerInit();        //Timer initialization
+  61   1        SysTimCnt = 0;
+  62   1        Uptime = 0;
+  63   1      }
+  64          
+  65          
+  66          //==============================================================================
+  67          //--------------------------------FUNCTIONS-------------------------------------
+  68          //==============================================================================
+  69          void AppProcess()
+  70          {
+  71   1        if (UptimeOld != Uptime)
+  72   1        {
+  73   2          UptimeOld = Uptime;
+  74   2          ReadPage = GetPageID();
+  75   2          if (ReadPage == 1)
+  76   2          {
+  77   3            PageChange(0);
+  78   3          }
+  79   2          else if (ReadPage == 0)
+  80   2          {
+  81   3            PageChange(1);
+  82   3          }
+  83   2          else
+  84   2          {
+  85   3            PageChange(2);
+  86   3          }         
+  87   2        }
+  88   1          UartProcess();
+  89   1      }
+  90          
+  91          //==============================================================================
+  92          //---------------------------------END FILE-------------------------------------
+  93          //==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    116    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     14    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

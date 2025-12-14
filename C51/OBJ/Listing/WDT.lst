@@ -1,0 +1,104 @@
+C51 COMPILER V9.57.0.0   WDT                                                               12/14/2025 23:42:35 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE WDT
+OBJECT MODULE PLACED IN ..\OBJ\WDT.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\WDT\WDT.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USER;
+                    -..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\HANDWA
+                    -RE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\WDT.lst) TABS(2) OBJECT(..\OBJ\WDT.obj)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "WDT.h"
+  36          
+  37          //==============================================================================
+  38          //---------------------------------Defines--------------------------------------
+  39          //==============================================================================
+  40          
+  41          //==============================================================================
+  42          //--------------------------------FUNCTIONS-------------------------------------
+  43          //==============================================================================
+  44          /**
+  45           * @brief Starts the watchdog timer.
+  46           * Sets the appropriate bit in MUX_SEL to enable the watchdog.
+  47           */
+  48          void WDTStart(void)
+  49          {
+  50   1          MUX_SEL |= 0x02;
+  51   1      }
+  52          
+  53          /**
+C51 COMPILER V9.57.0.0   WDT                                                               12/14/2025 23:42:35 PAGE 2   
+
+  54           * @brief Stops the watchdog timer.
+  55           * Clears the appropriate bit in MUX_SEL to disable the watchdog.
+  56           */
+  57          void WDTStop(void)
+  58          {
+  59   1          MUX_SEL &= 0xFD;
+  60   1      }
+  61          
+  62          /**
+  63           * @brief Refreshes the watchdog timer to prevent reset.
+  64           * Sets the refresh bit in MUX_SEL.
+  65           */
+  66          void WDTRefresh(void)
+  67          {
+  68   1          MUX_SEL |= 0x01;
+  69   1      }
+  70          
+  71          //==============================================================================
+  72          //---------------------------------END FILE-------------------------------------
+  73          //==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     12    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

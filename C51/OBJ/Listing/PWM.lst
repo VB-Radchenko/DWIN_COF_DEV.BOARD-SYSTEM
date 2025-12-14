@@ -1,0 +1,201 @@
+C51 COMPILER V9.57.0.0   PWM                                                               12/14/2025 23:42:35 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE PWM
+OBJECT MODULE PLACED IN ..\OBJ\PWM.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\PWM\PWM.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USER;
+                    -..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\ADC;..\HANDWARE\GPIO;..\HANDWARE\PWM;..\HANDWARE\TIMER;..\HANDWARE\UART;..\HANDWA
+                    -RE\SYSTEM;..\HANDWARE\WDT;..\HANDWARE\APP) DEBUG PRINT(..\OBJ\Listing\PWM.lst) TABS(2) OBJECT(..\OBJ\PWM.obj)
+
+line level    source
+
+   1          /*
+   2          @verbatim
+   3          --------------------------------------------------------------------------------
+   4          MIT License
+   5          
+   6          Copyright (c) [2025] [Vladimir Radchenko]
+   7          Version 1.0
+   8          
+   9          For communication or thanks, you can contact me by mail DwinRVB@mail.ru
+  10          
+  11          Permission is hereby granted, free of charge, to any person obtaining a copy
+  12          of this software and associated documentation files (the "Software"), to deal
+  13          in the Software without restriction, including without limitation the rights
+  14          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  15          copies of the Software, and to permit persons to whom the Software is
+  16          furnished to do so, subject to the following conditions:
+  17          
+  18          The above copyright notice and this permission notice shall be included in all
+  19          copies or substantial portions of the Software.
+  20          
+  21          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  22          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  23          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  24          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  25          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  26          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  27          SOFTWARE.
+  28          --------------------------------------------------------------------------------
+  29          @endverbatim
+  30          */
+  31          
+  32          //==============================================================================
+  33          //---------------------------------Includes-------------------------------------
+  34          //==============================================================================
+  35          #include "PWM.h" // OK
+  36          #include "UART.h"
+  37          #include "Delay.h"
+  38          
+  39          //==============================================================================
+  40          //---------------------------------Defines--------------------------------------
+  41          //==============================================================================
+  42          /**
+  43           * @def PWM0_SET_ADDR
+  44           * @brief DGUS register address for PWM0 settings (0x86).
+  45           */
+  46          #define PWM0_SET_ADDR     0x86
+  47          
+  48          /**
+  49           * @def PWM1_SET_ADDR
+  50           * @brief DGUS register address for PWM1 (DAC) settings (0x88).
+  51           */
+  52          #define PWM1_SET_ADDR     0x88
+  53          
+C51 COMPILER V9.57.0.0   PWM                                                               12/14/2025 23:42:35 PAGE 2   
+
+  54          /**
+  55           * @def DUTY_MAX
+  56           * @brief Maximum duty cycle percentage (100%).
+  57           */
+  58          #define DUTY_MAX        100
+  59          
+  60          /**
+  61           * @def MILI_VOLTAGE_MAX
+  62           * @brief Maximum DAC output voltage in millivolts (13200 mV).
+  63           */
+  64          #define MILI_VOLTAGE_MAX    13200
+  65          
+  66          //==============================================================================
+  67          //---------------------------------VARIABLES------------------------------------
+  68          //==============================================================================
+  69          /**
+  70           * @var uint16_t SetDataPwm0
+  71           * @brief Stores PWM0 setting data.
+  72           */
+  73          uint16_t SetDataPwm0;
+  74          
+  75          /**
+  76           * @var uint16_t SetDataPwm1
+  77           * @brief Stores PWM1 (DAC) setting data.
+  78           */
+  79          uint16_t SetDataPwm1;
+  80          
+  81          /**
+  82           * @var uint8_t TempSet[6]
+  83           * @brief Buffer for UART transmission of PWM/DAC settings.
+  84           */
+  85          uint8_t TempSet[6] = {0xAA, 0x0A, 0x3A, 0x56, 0x78, 0x00};
+  86          
+  87          //==============================================================================
+  88          //----------------------------------INIT---------------------------------------
+  89          //==============================================================================
+  90          /**
+  91           * @brief Initializes PWM0 with specified divider and precision.
+  92           * @param Div Clock divider for PWM0 frequency.
+  93           * @param Precision PWM0 resolution value.
+  94           */
+  95          void PwmInit(uint8_t Div, uint16_t Precision)
+  96          {
+  97   1          WriteDgus((PWM0_SET_ADDR + 1), Precision);
+  98   1          WriteDgus(PWM0_SET_ADDR, (0x5A00 + Div));
+  99   1          while (ReadDgus(PWM0_SET_ADDR) & 0xFF00) { SysDelayUs(500); }
+ 100   1      }
+ 101          
+ 102          /**
+ 103           * @brief Initializes DAC (PWM1) with specified divider and precision.
+ 104           * @param Div Clock divider for DAC frequency.
+ 105           * @param Precision DAC resolution value.
+ 106           */
+ 107          void DacInit(uint8_t Div, uint16_t Precision)
+ 108          {
+ 109   1          WriteDgus((PWM1_SET_ADDR + 1), Precision);
+ 110   1          WriteDgus(PWM1_SET_ADDR, (0x5A00 + Div));
+ 111   1          while (ReadDgus(PWM1_SET_ADDR) & 0xFF00) { SysDelayUs(500); }
+ 112   1      }
+ 113          
+ 114          //==============================================================================
+ 115          //--------------------------------FUNCTIONS-------------------------------------
+C51 COMPILER V9.57.0.0   PWM                                                               12/14/2025 23:42:35 PAGE 3   
+
+ 116          //==============================================================================
+ 117          
+ 118          //==============================================================================
+ 119          //-----------------------------------PWM----------------------------------------
+ 120          //==============================================================================
+ 121          /**
+ 122           * @brief Sets the duty cycle for PWM0.
+ 123           * @param duty Duty cycle percentage (0 to 100).
+ 124           */
+ 125          void PwmSetDuty(uint16_t duty)
+ 126          {
+ 127   1          uint8_t cnt = 0;
+ 128   1          uint16_t TempDuty = 0;
+ 129   1      
+ 130   1          if (duty > DUTY_MAX) duty = DUTY_MAX;
+ 131   1          if (duty == DUTY_MAX) { TempDuty = PWM_ACCURACY; }
+ 132   1          else { TempDuty = ((uint32_t)PWM_ACCURACY * (uint32_t)duty) / DUTY_MAX; }
+ 133   1          TempSet[0] = 0xAA;
+ 134   1          TempSet[1] = TempDuty >> 8;
+ 135   1          TempSet[2] = (uint8_t)TempDuty;
+ 136   1          TempSet[5] = 0;
+ 137   1          for (cnt = 0; cnt < 5; cnt++) TempSet[5] += TempSet[cnt];
+ 138   1          for (cnt = 0; cnt < 6; cnt++) UartSendByte(3, TempSet[cnt]);
+ 139   1      }
+ 140          
+ 141          //==============================================================================
+ 142          //-----------------------------------DAC----------------------------------------
+ 143          //==============================================================================
+ 144          /**
+ 145           * @brief Sets the output voltage for DAC (PWM1) in millivolts.
+ 146           * @param mV Output voltage in millivolts (0 to 10000).
+ 147           */
+ 148          void DacSetOut(uint16_t mV)
+ 149          {
+ 150   1          uint8_t cnt = 0;
+ 151   1          uint16_t TempVoltage = 0;
+ 152   1          if (mV > MILI_VOLTAGE_MAX) { mV = MILI_VOLTAGE_MAX; }
+ 153   1          if (mV == MILI_VOLTAGE_MAX) { TempVoltage = PWM_ACCURACY; }
+ 154   1          else { TempVoltage = ((uint32_t)PWM_ACCURACY * (uint32_t)mV) / MILI_VOLTAGE_MAX; }
+ 155   1          TempSet[0] = 0xAA;
+ 156   1          TempSet[3] = TempVoltage >> 8;
+ 157   1          TempSet[4] = (uint8_t)TempVoltage;
+ 158   1          TempSet[5] = 0;
+ 159   1          for (cnt = 0; cnt < 5; cnt++) TempSet[5] += TempSet[cnt];
+ 160   1          for (cnt = 0; cnt < 6; cnt++) { UartSendByte(3, TempSet[cnt]); }
+ 161   1      }
+ 162          
+ 163          
+ 164          //==============================================================================
+ 165          //---------------------------------END FILE-------------------------------------
+ 166          //==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    550    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     10      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+C51 COMPILER V9.57.0.0   PWM                                                               12/14/2025 23:42:35 PAGE 4   
+
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
